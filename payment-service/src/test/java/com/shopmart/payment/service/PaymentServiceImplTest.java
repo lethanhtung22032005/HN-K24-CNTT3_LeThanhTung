@@ -53,4 +53,19 @@ class PaymentServiceImplTest {
     }
 
     // TODO Câu 5: Viết thêm test cho refund()
+    @Test
+    void refund_shouldRefund_whenPaymentWasSuccessful() {
+        Payment payment = Payment.builder()
+                .id(1L)
+                .orderId(1L)
+                .amount(new BigDecimal("25000000"))
+                .status(PaymentStatus.SUCCESS)
+                .build();
+        when(paymentRepository.findByOrderId(1L)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentResponse result = serviceWith(false).refund(1L);
+
+        assertThat(result.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+    }
 }

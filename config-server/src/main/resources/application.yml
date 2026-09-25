@@ -4,7 +4,21 @@ server:
 spring:
   application:
     name: config-server
+  profiles:
+    # Đọc cấu hình từ thư mục local config-repo (native profile)
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          # Hỗ trợ cả khi chạy từ thư mục gốc project và từ trong module config-server
+          search-locations: file:./config-repo,file:../config-repo
 
-# TODO Câu 1: Cấu hình nguồn lưu cấu hình (native/local hoặc git)
-#   - Gợi ý native: đọc các file trong thư mục ../config-repo của project
-#   - Gợi ý git   : trỏ tới một repository chứa các file cấu hình
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

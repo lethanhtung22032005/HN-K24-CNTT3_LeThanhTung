@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # Tắt auto-locator, chỉ dùng routes khai báo tường minh bên dưới
+          enabled: false
+      routes:
+        # Câu 1: dùng lb:// để Gateway Load Balancing giữa các instance trong Eureka
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/order/**
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payment/**

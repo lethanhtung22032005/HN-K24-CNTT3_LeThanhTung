@@ -15,10 +15,15 @@
     <description>Service Registry (Eureka)</description>
 
     <dependencies>
-        <!-- TODO Câu 1: thay spring-boot-starter bằng dependency spring-cloud-starter-netflix-eureka-server -->
+        <!-- Câu 1: Eureka Server (Service Registry) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <dependency>

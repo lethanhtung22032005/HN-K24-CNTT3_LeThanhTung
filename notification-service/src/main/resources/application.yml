@@ -1,0 +1,9 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notification-service
+  # Câu 1 + Câu 5: nạp cấu hình tập trung (kafka, eureka) từ Config Server
+  config:
+    import: optional:configserver:http://localhost:8888

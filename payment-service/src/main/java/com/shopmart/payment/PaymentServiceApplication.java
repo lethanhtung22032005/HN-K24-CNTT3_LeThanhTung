@@ -3,8 +3,10 @@ package com.shopmart.payment;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-// TODO Câu 1: Đăng ký service vào Eureka
+// Câu 1: Đăng ký service vào Eureka
+@EnableDiscoveryClient
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class PaymentServiceApplication {

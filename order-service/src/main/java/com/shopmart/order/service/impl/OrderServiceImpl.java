@@ -1,9 +1,14 @@
 package com.shopmart.order.service.impl;
 
+import com.shopmart.order.client.InventoryGateway;
 import com.shopmart.order.dto.OrderRequest;
 import com.shopmart.order.dto.OrderResponse;
+import com.shopmart.order.dto.ProductDto;
 import com.shopmart.order.entity.Order;
 import com.shopmart.order.entity.OrderStatus;
+import com.shopmart.order.event.OrderEvent;
+import com.shopmart.order.event.OrderEventPublisher;
+import com.shopmart.order.event.SagaEventType;
 import com.shopmart.order.exception.ResourceNotFoundException;
 import com.shopmart.order.repository.OrderRepository;
 import com.shopmart.order.service.OrderService;
@@ -12,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -20,23 +26,39 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final InventoryGateway inventoryGateway;
+    private final OrderEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
-        // TODO Câu 2: Gọi inventory-service qua FeignClient (có Circuit Breaker + fallback)
-        //            để lấy thông tin sản phẩm -> tính totalAmount = price * quantity
+        // Câu 2: Gọi inventory-service qua FeignClient (đã bọc Circuit Breaker + fallback)
+        //        để lấy thông tin sản phẩm -> tính totalAmount = price * quantity.
+        ProductDto product = inventoryGateway.getProduct(request.getProductId());
+        BigDecimal totalAmount = product.getPrice() != null
+                ? product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()))
+                : BigDecimal.ZERO;
 
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
                 .productId(request.getProductId())
                 .quantity(request.getQuantity())
+                .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
                 .build();
         Order saved = orderRepository.save(order);
-        log.info("Created order id={} with status PENDING", saved.getId());
+        log.info("Created order id={} with status PENDING, totalAmount={}", saved.getId(), totalAmount);
 
-        // TODO Câu 3: Publish OrderEvent (type = ORDER_CREATED) lên Kafka topic "order" để khởi động Saga
+        // Câu 3: Publish OrderEvent (type = ORDER_CREATED) lên Kafka topic "order" để khởi động Saga
+        OrderEvent event = OrderEvent.builder()
+                .orderId(saved.getId())
+                .productId(saved.getProductId())
+                .quantity(saved.getQuantity())
+                .amount(totalAmount)
+                .type(SagaEventType.ORDER_CREATED)
+                .message("Đơn hàng mới được tạo")
+                .build();
+        eventPublisher.publish(event);
 
         return OrderResponse.from(saved);
     }

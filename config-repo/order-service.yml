@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/shopmart_order?createDatabaseIfNotExist=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  kafka:
+    consumer:
+      group-id: order-service-group
+      properties:
+        spring.json.value.default.type: com.shopmart.order.event.OrderEvent
+
+logging:
+  level:
+    com.shopmart.order: INFO

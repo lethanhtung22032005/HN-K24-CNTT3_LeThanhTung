@@ -9,6 +9,9 @@ import com.shopmart.inventory.repository.ProductRepository;
 import com.shopmart.inventory.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
+    /** Tên cache (key trong Redis là "products::<id>"). */
+    private static final String PRODUCTS_CACHE = "products";
+
     private final ProductRepository productRepository;
 
     @Override
@@ -28,8 +34,10 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-    // TODO Câu 4: Cache kết quả - log dưới đây chỉ được in ra khi thực sự truy vấn DB
+    // Câu 4: Cache-Aside - lần đầu truy vấn DB (in log "Querying DB..."),
+    //         các lần sau lấy từ Redis nên KHÔNG in log này.
     @Override
+    @Cacheable(value = PRODUCTS_CACHE, key = "#id")
     public ProductResponse getProductById(Long id) {
         log.info("Querying DB for product id={}", id);
         return ProductResponse.from(findProduct(id));
@@ -37,6 +45,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CachePut(value = PRODUCTS_CACHE, key = "#result.id")
     public ProductResponse createProduct(ProductRequest request) {
         Product product = Product.builder()
                 .name(request.getName())
@@ -48,9 +57,10 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.from(saved);
     }
 
-    // TODO Câu 4: Cập nhật cache khi sửa sản phẩm
+    // Câu 4: cập nhật cache khi sửa sản phẩm
     @Override
     @Transactional
+    @CachePut(value = PRODUCTS_CACHE, key = "#id")
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = findProduct(id);
         product.setName(request.getName());
@@ -60,18 +70,20 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.from(productRepository.save(product));
     }
 
-    // TODO Câu 4: Xoá cache khi xoá sản phẩm
+    // Câu 4: xoá cache khi xoá sản phẩm
     @Override
     @Transactional
+    @CacheEvict(value = PRODUCTS_CACHE, key = "#id")
     public void deleteProduct(Long id) {
         Product product = findProduct(id);
         productRepository.delete(product);
         log.info("Deleted product id={}", id);
     }
 
-    // TODO Câu 4: Tồn kho thay đổi -> cache phải được cập nhật hoặc xoá
+    // Câu 4: tồn kho thay đổi -> cập nhật lại cache
     @Override
     @Transactional
+    @CachePut(value = PRODUCTS_CACHE, key = "#id")
     public ProductResponse decreaseStock(Long id, int quantity) {
         Product product = findProduct(id);
         if (product.getStock() < quantity) {
@@ -85,9 +97,10 @@ public class ProductServiceImpl implements ProductService {
         return ProductResponse.from(productRepository.save(product));
     }
 
-    // TODO Câu 4: Tồn kho thay đổi -> cache phải được cập nhật hoặc xoá
+    // Câu 4: tồn kho thay đổi (compensate) -> cập nhật lại cache
     @Override
     @Transactional
+    @CachePut(value = PRODUCTS_CACHE, key = "#id")
     public ProductResponse increaseStock(Long id, int quantity) {
         Product product = findProduct(id);
         product.setStock(product.getStock() + quantity);

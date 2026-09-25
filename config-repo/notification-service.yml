@@ -1,0 +1,13 @@
+server:
+  port: 8085
+
+spring:
+  kafka:
+    consumer:
+      group-id: notification-service-group
+      properties:
+        spring.json.value.default.type: com.shopmart.notification.event.OrderEvent
+
+logging:
+  level:
+    com.shopmart.notification: INFO
