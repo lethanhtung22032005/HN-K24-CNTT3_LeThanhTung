@@ -1,18 +1,19 @@
 # Hạ tầng chạy local cho ShopMart.
 #   docker compose up -d
 #
-# Gồm: MySQL (database per service) + Kafka (KRaft, không cần Zookeeper) + Redis (cache).
-# Nếu máy đã có MySQL chạy ở cổng 3306 thì có thể bỏ service mysql bên dưới
-# và sửa username/password trong cấu hình của từng service (config-repo/*.yml).
+# Gồm: MySQL (cổng host 3307) + Kafka (KRaft) + Redis (cache).
+# MySQL container dùng cổng host 3307 để tránh xung đột với MySQL80 cài sẵn trên Windows (3306).
+# Các service kết nối tới localhost:3307 - xem config-repo/{order,inventory,payment}-service.yml
 
 services:
+  # MySQL của Docker chạy ở cổng host 3307 (MySQL cài sẵn trên máy vẫn ở 3306).
   mysql:
     image: mysql:8.0
     container_name: shopmart-mysql
     environment:
       MYSQL_ROOT_PASSWORD: 123456
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
