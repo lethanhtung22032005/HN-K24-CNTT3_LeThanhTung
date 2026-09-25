@@ -1,0 +1,32 @@
+# Build output
+target/
+build/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+*.env
+.env
