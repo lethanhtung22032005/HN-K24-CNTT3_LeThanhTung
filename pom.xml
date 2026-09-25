@@ -31,6 +31,9 @@
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <!-- Lombok 1.18.34 (mặc định của Boot 3.3.5) không hỗ trợ JDK 23/24.
+             Nâng lên 1.18.38 để biên dịch được khi IDE dùng JDK 24. -->
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <!--
@@ -51,6 +54,16 @@
     </dependencyManagement>
 
     <build>
+        <!-- JDK 23+ tắt annotation processing mặc định (implicit). Bật lại để Lombok chạy. -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <proc>full</proc>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
